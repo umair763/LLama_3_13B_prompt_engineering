@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import datetime
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -161,7 +162,7 @@ def plan_month(
         for it in all_scored
     ]
 
-    return {
+    result = {
         "generatedAt": today.isoformat(),
         "tasksCount": len(tasks),
         "subtasksCount": len(serialized_scored),
@@ -170,6 +171,7 @@ def plan_month(
         "overload": overload_payload,
         "errors": generation_errors,
     }
+    return _ensure_json_safe(result)
 
 
 def build_schedule(*, items: list[dict[str, Any]], today: date) -> dict[str, Any]:
@@ -245,6 +247,19 @@ def build_schedule(*, items: list[dict[str, Any]], today: date) -> dict[str, Any
     weeks_out = [{"week": k, "totalMinutes": v} for k, v in sorted(weeks.items())]
 
     return {"days": days_out, "weeks": weeks_out}
+
+
+def _ensure_json_safe(obj: Any) -> Any:
+    """Recursively convert non-JSON types (date/datetime, sets) to serializable forms."""
+    if isinstance(obj, dict):
+        return {k: _ensure_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_ensure_json_safe(v) for v in obj]
+    if isinstance(obj, (set, tuple)):
+        return [_ensure_json_safe(v) for v in obj]
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    return obj
 
 
 def load_tasks_from_json(path: str) -> list[TaskInput]:

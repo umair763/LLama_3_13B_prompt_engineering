@@ -36,3 +36,24 @@ The CLI prints JSON containing:
 - `schedule.weeks`: weekly total minutes
 - `overload`: top overload windows in the next 7–15 days + suggestions
 - `errors`: tasks that failed JSON parsing
+
+## Evaluate
+
+Provide a small ground-truth file with expected subtasks, ranked order, and overloaded weeks (optional):
+
+```json
+{
+  "expectedSubtasks": [{ "title": "Outline key points" }, { "title": "Draft slide content" }],
+  "rankedSubtasks": [
+    { "title": "Outline key points", "rank": 1 },
+    { "title": "Draft slide content", "rank": 2 }
+  ],
+  "overloadWeeks": ["2026-W02"]
+}
+```
+
+Run evaluation:
+
+```bash
+python -m src.eval.evaluate --ground-truth ground_truth.json --pred plan.json
+```
