@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Prepare project presentation",
+    "deadline": "2026-01-12",
+    "description": "Q1 status update: results, blockers, next steps"
+  },
+  {
+    "title": "Ship v1 onboarding flow",
+    "deadline": "2026-01-18",
+    "description": "Implement signup -> email verify -> profile setup, coordinate with design"
+  },
+  {
+    "title": "Finalize monthly budget report",
+    "deadline": "2026-01-10",
+    "description": "Close December books, reconcile invoices, send finance summary"
+  },
+  {
+    "title": "Customer escalation: fix intermittent API timeouts",
+    "deadline": "2026-01-08",
+    "description": "Investigate p95 latency spikes, mitigate, and communicate update"
+  },
+  {
+    "title": "Prepare interview loop for backend candidate",
+    "deadline": "2026-01-22",
+    "description": "Create questions, schedule panel, align on rubric"
+  }
+]
