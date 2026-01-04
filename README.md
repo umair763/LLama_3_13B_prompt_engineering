@@ -57,3 +57,55 @@ Run evaluation:
 ```bash
 python -m src.eval.evaluate --ground-truth ground_truth.json --pred plan.json
 ```
+
+## Visualize
+
+Generate simple charts (weekly load and top priorities):
+
+```bash
+python -m src.eval.visualize --plan plan.json --outdir figs
+```
+
+Outputs `figs/weekly_load.png` and `figs/top_priorities.png`.
+
+## Offline Use
+
+- If you already have the model locally (e.g., as a Kaggle Dataset), set `MODEL_ID` to the local path and set offline mode:
+
+```bash
+export TRANSFORMERS_OFFLINE=1  # PowerShell: $env:TRANSFORMERS_OFFLINE=1
+python -m src.cli --input example_tasks.json --output plan.json --model-id /kaggle/input/your-model-folder
+```
+
+The loader respects `TRANSFORMERS_OFFLINE` and will not hit the network.
+
+## Fine-tune with LoRA
+
+Prepare training data as JSON/JSONL with records that include task context and the expected JSON output (subtasks). Example JSONL record:
+
+```json
+{
+  "task": "Prepare project presentation",
+  "deadline": "2026-01-12",
+  "description": "Q1 status",
+  "expectedJson": { "subtasks": [{ "title": "Outline key points", "estimatedMinutes": 60, "difficulty": 3 }] }
+}
+```
+
+Install extra deps:
+
+```bash
+pip install peft bitsandbytes datasets
+```
+
+Run LoRA fine-tuning (saves small adapters suitable for offline use):
+
+```bash
+python -m src.train.lora_finetune \
+  --base-model mistralai/Mistral-7B-Instruct-v0.2 \
+  --train-data data/train.jsonl \
+  --output-dir lora_adapters \
+  --epochs 1 --batch-size 1
+```
+
+To use adapters later, load the base model and then apply the adapters with PEFT, or merge during export if needed.
