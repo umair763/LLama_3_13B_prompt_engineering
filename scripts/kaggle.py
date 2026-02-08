@@ -141,21 +141,21 @@ MODEL_NAME = os.getenv("MODEL_NAME", MODEL_CANDIDATES[0])
 # Training hyperparameters (all configurable here)
 CONFIG = {
     # Data
-    "max_seq_length": 256,  # Token limit per example (256 is good for task decomposition)
+    "max_seq_length": 512,  # Increase context to better capture tasks + lists
     "train_sample_limit": 5000,  # Max training samples (5000 fits in 2-3 hours on T4 x2)
     "eval_sample_limit": 100,  # Eval samples (100 is enough for metrics)
     
     # Model architecture
-    "lora_r": 8,  # LoRA rank (8 is good balance)
-    "lora_alpha": 32,  # LoRA alpha (typically 2-4x of r)
+    "lora_r": 16,  # Higher rank improves adapter capacity
+    "lora_alpha": 32,  # Alpha ~2x r is a good baseline
     "lora_dropout": 0.05,
     "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
     
     # Training
     "batch_size": 2,  # Per device (T4 safe)
     "gradient_accumulation": 8,  # Effective batch = 2x8 = 16
-    "num_epochs": 1,  # 1 epoch for faster training
-    "learning_rate": 5e-5,
+    "num_epochs": 3,  # More epochs to improve convergence
+    "learning_rate": 1e-4,  # Slightly higher LR for LoRA
     "warmup_ratio": 0.03,
     "weight_decay": 0.01,
     
@@ -165,7 +165,7 @@ CONFIG = {
     "optimizer": "paged_adamw_32bit",
     
     # Logging and saving
-    "eval_steps": 100,
+    "eval_steps": 200,
     "logging_steps": 25,
     "save_only_last": True,  # Saves storage
 }
@@ -278,7 +278,9 @@ for item in raw_data:
 
     input_text = (
         "### Instruction:\n"
-        "Break the following task into clear, ordered subtasks.\n\n"
+        "Break the following task into clear, ordered subtasks.\n"
+        "Return only a numbered list (1., 2., ...) with concise steps.\n"
+        "Do not include headings, sections, or explanations.\n\n"
         f"### Task:\n{task_name}\n"
     )
 
@@ -343,7 +345,13 @@ def build_prompt(user_text: str) -> str:
     user_text = user_text.strip()
     # Prefer the model's chat template
     if getattr(tokenizer, "chat_template", None):
-        messages = [{"role": "user", "content": user_text}]
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a task decomposition assistant. Output only a numbered list of subtasks (1., 2., ...). No headings, sections, or extra text."
+            },
+            {"role": "user", "content": user_text},
+        ]
         return tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
@@ -705,7 +713,13 @@ def generate_output(prompt: str, max_new_tokens: int = 192) -> str:
     """Generate task decomposition output from the model."""
     model.eval()
     if getattr(tokenizer, "chat_template", None):
-        messages = [{"role": "user", "content": prompt.strip()}]
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a task decomposition assistant. Output only a numbered list of subtasks (1., 2., ...). No headings, sections, or extra text."
+            },
+            {"role": "user", "content": prompt.strip()},
+        ]
         input_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     else:
         input_text = f"[INST] {prompt.strip()} [/INST]"
@@ -716,8 +730,8 @@ def generate_output(prompt: str, max_new_tokens: int = 192) -> str:
             **inputs,
             max_new_tokens=max_new_tokens,
             do_sample=False,
-            temperature=0.7,
-            top_p=0.9,
+            no_repeat_ngram_size=3,
+            repetition_penalty=1.1,
             pad_token_id=tokenizer.pad_token_id,
             eos_token_id=tokenizer.eos_token_id,
         )

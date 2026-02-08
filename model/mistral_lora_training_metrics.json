@@ -1,0 +1,6 @@
+{
+  "final_loss": 0.78021346875273,
+  "total_steps": 313,
+  "training_samples": 5000,
+  "eval_samples": 2000
+}
