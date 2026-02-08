@@ -1,0 +1,83 @@
+# =========================
+# Secrets & environment
+# =========================
+.env
+.env.*
+*.env
+secrets.yaml
+secrets.json
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# =========================
+# Virtual environments
+# =========================
+venv/
+.venv/
+env/
+ENV/
+
+# =========================
+# Jupyter / notebooks
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Hugging Face / ML
+# =========================
+.cache/
+huggingface/
+hf_cache/
+wandb/
+mlruns/
+logs/
+
+# Model checkpoints & outputs
+checkpoints/
+outputs/
+runs/
+
+# =========================
+# PyTorch / TensorFlow
+# =========================
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Explicit secret patterns
+# =========================
+*token*
+*secret*
+*key*
